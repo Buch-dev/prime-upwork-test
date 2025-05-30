@@ -3,10 +3,9 @@
 import Image from "next/image";
 import React, { useState, useEffect } from "react";
 
-// Custom hook for responsive breakpoints
+// Responsive slides count
 function useVisibleSlides() {
-  const [visibleSlides, setVisibleSlides] = useState(3); // Default to 3 for desktop SSR
-
+  const [visibleSlides, setVisibleSlides] = useState(3);
   useEffect(() => {
     function updateSlides() {
       if (window.innerWidth >= 1024) setVisibleSlides(3);
@@ -17,7 +16,6 @@ function useVisibleSlides() {
     window.addEventListener("resize", updateSlides);
     return () => window.removeEventListener("resize", updateSlides);
   }, []);
-
   return visibleSlides;
 }
 
@@ -33,24 +31,33 @@ function Slider() {
   const visibleSlides = useVisibleSlides();
   const [current, setCurrent] = useState(0);
 
+  // Slide navigation
   const handlePrev = () => {
     setCurrent((prev) =>
       prev === 0 ? contracts.length - visibleSlides : prev - 1
     );
   };
-
   const handleNext = () => {
     setCurrent((prev) =>
       prev >= contracts.length - visibleSlides ? 0 : prev + 1
     );
   };
 
-  // Responsive container width
-  const slideWidth = 335;
-  const containerWidth = slideWidth * visibleSlides;
+  // Reset current if visibleSlides changes and current is out of range
+  useEffect(() => {
+    if (current > contracts.length - visibleSlides) setCurrent(0);
+    // eslint-disable-next-line
+  }, [visibleSlides]);
+
+  // Responsive container max width
+  const maxWidths = {
+    1: "max-w-[98vw]",
+    2: "max-w-[960px]",      // Slightly wider for 2 slides
+    3: "max-w-[1440px]",    // Slightly less for 3 slides
+  };
 
   return (
-    <section className="flex flex-col items-center justify-center mt-10 lg:mt-16">
+    <section className="flex flex-col items-center justify-center mt-10 lg:mt-16 w-full px-2">
       <h2>
         <Image
           src={"/successful-contract.svg"}
@@ -60,13 +67,13 @@ function Slider() {
         />
       </h2>
       <div className="mt-7 flex w-full justify-center">
-        {/* Responsive slider */}
         <div
-          className="w-full max-w-[1005px] h-auto overflow-hidden relative"
-          style={{ width: `${containerWidth}px` }}
+          className={`overflow-hidden relative w-full ${
+            maxWidths[visibleSlides] || "max-w-[1440px]"
+          } mx-auto`}
         >
           <div
-            className="transition-transform duration-500 ease-in-out flex"
+            className="flex transition-transform duration-500 ease-in-out gap-2"
             style={{
               width: `${(contracts.length / visibleSlides) * 100}%`,
               transform: `translateX(-${(current * 100) / contracts.length}%)`,
@@ -78,16 +85,17 @@ function Slider() {
                 className="flex-shrink-0"
                 style={{
                   width: `${100 / contracts.length}%`,
-                  paddingRight:
-                    idx !== contracts.length - 1 ? "0.5rem" : 0,
                 }}
               >
-                <div className="w-full aspect-[335/433] relative">
+                <div className="w-full aspect-[467/486] bg-[#f3f3f3] rounded-xl overflow-hidden relative">
                   <Image
                     src={src}
                     alt="contract"
                     fill
-                    style={{ objectFit: "cover", borderRadius: "12px" }}
+                    style={{
+                      objectFit: "cover",
+                      borderRadius: "12px",
+                    }}
                     sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
                   />
                 </div>
